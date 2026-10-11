@@ -3,10 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="refresh" content="0; url=frontend/index.html">
-<title>GlowUp MUA</title>
+<title>GlowUp MUA — Sistem Manajemen</title>
+<link rel="stylesheet" href="frontend/style.css">
 </head>
-<body style="font-family:Arial,sans-serif;background:#fff7fb;color:#382936;text-align:center;padding:48px">
-<p>Membuka aplikasi… Jika tidak otomatis, <a href="frontend/index.html">klik di sini</a>.</p>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <div class="logo">GlowUp MUA</div><div class="logo-sub">Sistem Manajemen Jasa Makeup</div>
+  <nav class="nav">
+    <button class="active" data-page="dashboard">▣ &nbsp;Dashboard</button>
+    <button data-page="customers">♡ &nbsp;Pelanggan</button>
+    <button data-page="packages">✦ &nbsp;Paket Makeup</button>
+    <button data-page="bookings">▤ &nbsp;Booking</button>
+    <button data-page="payments">◆ &nbsp;Pembayaran</button>
+    <button data-page="reports">◈ &nbsp;Laporan</button>
+  </nav>
+  <div class="side-foot">4 entitas saling terhubung<div class="db-status" id="dbStatus"><i></i><span>Menghubungkan…</span></div></div>
+</aside>
+<main class="main">
+  <header class="top"><div><h1 id="pageTitle">Dashboard</h1><p id="pageDesc">Pantau pelanggan, jadwal makeup, transaksi, dan ringkasan usaha.</p></div><div class="date-badge" id="today"></div></header>
+
+  <section id="dashboard" class="page active">
+    <div class="cards">
+      <div class="card"><div class="label">Total Pelanggan</div><div class="value" id="dCustomers">0</div><div class="card-note">Data pelanggan terdaftar</div></div>
+      <div class="card"><div class="label">Total Booking</div><div class="value" id="dBookings">0</div><div class="card-note">Semua jadwal tercatat</div></div>
+      <div class="card"><div class="label">Pendapatan Tercatat</div><div class="value" id="dRevenue">Rp0</div><div class="card-note">Pembayaran yang masuk</div></div>
+      <div class="card"><div class="label">Sisa Tagihan</div><div class="value" id="dReceivable">Rp0</div><div class="card-note">Belum dibayarkan pelanggan</div></div>
+    </div>
+    <div class="grid2">
+      <div class="section"><div class="section-head"><h2>Jadwal Mendatang</h2><button class="btn btn-light" onclick="navigate('bookings')">Lihat booking</button></div><div id="upcoming"></div></div>
+      <div class="section"><div class="section-head"><h2>Ringkasan Usaha</h2></div>
+        <div class="stat-row"><span>Total nilai booking</span><b id="dBill">Rp0</b></div>
+        <div class="stat-row"><span>Total pembayaran masuk</span><b id="dPaid">Rp0</b></div>
+        <div class="stat-row"><span>Booking lunas</span><b id="dSettled">0</b></div>
+        <div class="stat-row"><span>Paket tersedia</span><b id="dPackages">0</b></div>
+      </div>
+    </div>
+    <div class="section"><div class="section-head"><h2>Alur 4 Entitas</h2></div>
+      <div class="notice"><b>Pelanggan → Booking ← Paket Makeup → Pembayaran.</b><br>Setiap booking terhubung ke satu pelanggan dan satu paket. Setiap pembayaran terhubung ke booking terkait. Total bayar, sisa tagihan, status lunas, dashboard, dan laporan diperbarui otomatis.</div>
+      <div class="quick-links"><button class="btn btn-primary" onclick="openCustomerModal()">+ Pelanggan</button><button class="btn btn-light" onclick="openPackageModal()">+ Paket</button><button class="btn btn-light" onclick="openBookingModal()">+ Booking</button><button class="btn btn-light" onclick="navigate('payments')">Catat pembayaran</button></div>
+    </div>
+  </section>
+
+  <section id="customers" class="page"><div class="section">
+    <div class="section-head"><h2>Data Pelanggan</h2><div class="toolbar"><input class="search" id="searchCustomer" placeholder="Cari nama / telepon..." oninput="renderCustomers()"><button class="btn btn-primary" onclick="openCustomerModal()">+ Tambah Pelanggan</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>ID</th><th>Nama</th><th>No. Telepon</th><th>Email</th><th>Jumlah Booking</th><th>Aksi</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+    <p class="hint">Pelanggan terhubung dengan data booking melalui customerId. Menghapus pelanggan yang sudah memiliki booking akan ditolak agar relasi data tetap aman.</p>
+  </div></section>
+
+  <section id="packages" class="page"><div class="section">
+    <div class="section-head"><h2>Katalog Paket Makeup</h2><button class="btn btn-primary" onclick="openPackageModal()">+ Tambah Paket</button></div>
+    <div class="package-grid" id="packageList"></div>
+    <p class="hint">Paket yang sudah digunakan dalam booking tidak dapat dihapus sampai booking terkait dihapus.</p>
+  </div></section>
+
+  <section id="bookings" class="page"><div class="section">
+    <div class="section-head"><h2>Booking & Jadwal</h2><div class="toolbar"><input class="search" id="searchBooking" placeholder="Cari pelanggan / kode..." oninput="renderBookings()"><button class="btn btn-primary" onclick="openBookingModal()">+ Booking Baru</button></div></div>
+    <div class="table-wrap"><table><thead><tr><th>Kode</th><th>Pelanggan</th><th>Paket</th><th>Tanggal</th><th>Jam</th><th>Lokasi</th><th>Total</th><th>Dibayar</th><th>Sisa</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="bookingTable"></tbody></table></div>
+  </div></section>
+
+  <section id="payments" class="page"><div class="section">
+    <div class="section-head"><h2>Riwayat Pembayaran</h2><div class="toolbar"><input class="search" id="searchPayment" placeholder="Cari booking / pelanggan..." oninput="renderPayments()"><button class="btn btn-primary" onclick="openPaymentModal()">+ Catat Pembayaran</button></div></div>
+    <div class="cards" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="card"><div class="label">Total Pembayaran Masuk</div><div class="value" id="pTotal">Rp0</div></div>
+      <div class="card"><div class="label">Jumlah Transaksi</div><div class="value" id="pCount">0</div></div>
+      <div class="card"><div class="label">Sisa Tagihan</div><div class="value" id="pRemaining">Rp0</div></div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Kode Booking</th><th>Pelanggan</th><th>Metode</th><th>Jumlah</th><th>Catatan</th><th>Aksi</th></tr></thead><tbody id="paymentTable"></tbody></table></div>
+    <p class="hint">Pembayaran akan otomatis mengurangi sisa tagihan booking terkait. Jumlah pembayaran tidak boleh melebihi sisa tagihan.</p>
+  </div></section>
+
+  <section id="reports" class="page">
+    <div class="cards">
+      <div class="card"><div class="label">Nilai Booking</div><div class="value" id="rBill">Rp0</div></div>
+      <div class="card"><div class="label">Pendapatan Diterima</div><div class="value" id="rRevenue">Rp0</div></div>
+      <div class="card"><div class="label">Piutang</div><div class="value" id="rDebt">Rp0</div></div>
+      <div class="card"><div class="label">Persentase Tertagih</div><div class="value" id="rPercent">0%</div></div>
+    </div>
+    <div class="grid2"><div class="section"><h2>Ringkasan Laporan</h2>
+      <div class="stat-row"><span>Total pelanggan</span><b id="rCustomers">0</b></div>
+      <div class="stat-row"><span>Total paket</span><b id="rPackages">0</b></div>
+      <div class="stat-row"><span>Total booking aktif</span><b id="rBookings">0</b></div>
+      <div class="stat-row"><span>Booking lunas</span><b id="rLunas">0</b></div>
+      <div class="stat-row"><span>Booking dibatalkan</span><b id="rCanceled">0</b></div>
+    </div><div class="section"><h2>Ekspor & Data</h2><p class="hint" style="margin:8px 0 16px">Unduh data dari empat entitas dalam satu file JSON untuk cadangan, impor backup, atau ekspor laporan booking sebagai CSV.</p><div class="quick-links"><button class="btn btn-primary" onclick="exportJSON()">Unduh Backup JSON</button><button class="btn btn-light" onclick="exportBookingsCSV()">Ekspor Booking CSV</button><button class="btn btn-light" onclick="document.getElementById('importFile').click()">Impor Backup JSON</button><input type="file" id="importFile" accept=".json,application/json" hidden><button class="btn btn-danger" onclick="resetData()">Reset Semua Data</button></div><p class="hint">Data tersimpan di database Supabase. Backup JSON tetap berguna sebagai cadangan, dan bisa diimpor kembali (termasuk backup dari versi localStorage lama).</p></div></div>
+  </section>
+</main></div>
+
+<div class="modal" id="customerModal"><div class="modal-box"><div class="modal-head"><h2 id="customerModalTitle">Tambah Pelanggan</h2><button class="close" onclick="closeModal('customerModal')">×</button></div><form id="customerForm"><input type="hidden" id="cId"><div class="form-grid">
+<div class="field"><label>Nama lengkap *</label><input id="cName" required maxlength="100"></div>
+<div class="field"><label>No. telepon *</label><input id="cPhone" required maxlength="30" placeholder="08xxxxxxxxxx"></div>
+<div class="field full"><label>Email (opsional)</label><input type="email" id="cEmail" maxlength="100"></div>
+<div class="field full"><label>Catatan (opsional)</label><textarea id="cNote" placeholder="Preferensi makeup atau catatan pelanggan"></textarea></div>
+</div><div class="form-actions"><button type="button" class="btn btn-light" onclick="closeModal('customerModal')">Batal</button><button class="btn btn-primary">Simpan Pelanggan</button></div></form></div></div>
+
+<div class="modal" id="packageModal"><div class="modal-box"><div class="modal-head"><h2 id="packageModalTitle">Tambah Paket Makeup</h2><button class="close" onclick="closeModal('packageModal')">×</button></div><form id="packageForm"><input type="hidden" id="pId"><div class="form-grid">
+<div class="field"><label>Nama paket *</label><input id="pName" required maxlength="100"></div><div class="field"><label>Harga (Rp) *</label><input type="number" id="pPrice" min="0" required></div>
+<div class="field full"><label>Fasilitas paket</label><textarea id="pFacilities" placeholder="Contoh: makeup, hairdo, touch up"></textarea></div>
+</div><div class="form-actions"><button type="button" class="btn btn-light" onclick="closeModal('packageModal')">Batal</button><button class="btn btn-primary">Simpan Paket</button></div></form></div></div>
+
+<div class="modal" id="bookingModal"><div class="modal-box"><div class="modal-head"><h2 id="bookingModalTitle">Booking Baru</h2><button class="close" onclick="closeModal('bookingModal')">×</button></div><form id="bookingForm"><input type="hidden" id="bId"><div class="form-grid">
+<div class="field"><label>Pelanggan *</label><select id="bCustomer" required></select></div><div class="field"><label>Paket makeup *</label><select id="bPackage" required></select></div>
+<div class="field"><label>Tanggal *</label><input type="date" id="bDate" required></div><div class="field"><label>Jam *</label><input type="time" id="bTime" required></div>
+<div class="field"><label>Lokasi</label><input id="bLocation" placeholder="Contoh: Semarang"></div><div class="field"><label>Status booking</label><select id="bStatus"><option value="Booking">Booking</option><option value="Confirmed">Dikonfirmasi</option><option value="Selesai">Selesai</option><option value="Dibatalkan">Dibatalkan</option></select></div>
+<div class="field full"><label>Catatan</label><textarea id="bNote" placeholder="Contoh: soft glam, request hairdo..."></textarea></div>
+</div><div class="form-actions"><button type="button" class="btn btn-light" onclick="closeModal('bookingModal')">Batal</button><button class="btn btn-primary">Simpan Booking</button></div></form></div></div>
+
+<div class="modal" id="paymentModal"><div class="modal-box"><div class="modal-head"><h2>Catat Pembayaran</h2><button class="close" onclick="closeModal('paymentModal')">×</button></div><form id="paymentForm"><div class="form-grid">
+<div class="field full"><label>Booking *</label><select id="payBooking" required></select></div>
+<div class="field"><label>Tanggal pembayaran *</label><input type="date" id="payDate" required></div><div class="field"><label>Jumlah bayar (Rp) *</label><input type="number" id="payAmount" min="1" required></div>
+<div class="field"><label>Metode</label><select id="payMethod"><option>Transfer</option><option>Cash</option><option>QRIS</option><option>E-Wallet</option></select></div><div class="field"><label>Catatan</label><input id="payNote" placeholder="DP / pelunasan"></div>
+</div><p class="hint" id="payHint"></p><div class="form-actions"><button type="button" class="btn btn-light" onclick="closeModal('paymentModal')">Batal</button><button class="btn btn-primary">Simpan Pembayaran</button></div></form></div></div>
+<div class="toast" id="toast"></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.4/dist/umd/supabase.js"></script>
+<script src="frontend/app.js"></script>
 </body>
 </html>
