@@ -3,7 +3,7 @@
    Isi: 1) Konfigurasi Supabase  2) Lapisan data (API)  3) Logika UI */
 
 /* ================= 1. KONFIGURASI SUPABASE =================
-   Publishable key AMAN di frontend selama RLS aktif (lihat backend/database/supabase/schema.sql).
+   Publishable key AMAN di frontend selama RLS aktif (lihat backend/schema.sql).
    JANGAN taruh secret key / service_role key di sini. */
 const SUPABASE_URL = 'https://cqcpcmswyurndejkafwu.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_R-TEOzyZZJ8jXuV0HfWQ2w_FqRIjDQx';
@@ -12,7 +12,9 @@ const SUPABASE_KEY = 'sb_publishable_R-TEOzyZZJ8jXuV0HfWQ2w_FqRIjDQx';
 /* Lapisan data: semua komunikasi ke Supabase ada di file ini.
    Kolom database memakai snake_case, UI memakai camelCase — dipetakan di bawah. */
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = (window.supabase && window.supabase.createClient)
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+  : null; // null = library Supabase gagal dimuat (cek koneksi internet / CDN)
 
 const fromDb = {
   customer: r => ({ id: r.id, name: r.name, phone: r.phone, email: r.email || '', note: r.note || '' }),
@@ -37,7 +39,7 @@ function friendlyError(error) {
   }
   if (error.code === '23503') return 'Data masih terhubung ke data lain. Hapus atau ubah data terkait terlebih dahulu.';
   if (error.code === '42501') return 'Akses ditolak oleh kebijakan RLS Supabase. Periksa policy di schema.sql.';
-  if (error.code === 'PGRST205' || error.code === '42P01') return 'Tabel belum dibuat. Jalankan backend/database/supabase/schema.sql di SQL Editor.';
+  if (error.code === 'PGRST205' || error.code === '42P01') return 'Tabel belum dibuat. Jalankan backend/schema.sql di SQL Editor.';
   return msg || 'Terjadi kesalahan pada database.';
 }
 
@@ -51,6 +53,7 @@ const nullIfEmpty = v => (v === undefined || v === null || String(v).trim() === 
 
 const API = {
   async loadAll() {
+    if (!sb) throw new Error('Library Supabase gagal dimuat. Periksa koneksi internet lalu muat ulang halaman.');
     const [c, p, b, py] = await Promise.all([
       run(sb.from('customers').select('*').order('created_at')),
       run(sb.from('packages').select('*').order('created_at')),
