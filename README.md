@@ -1,5 +1,7 @@
 # GlowUp MUA — Sistem Manajemen Jasa Makeup
 
+Akses Link: https://nadiaahpst.github.io/GLOW-UP-MUA-SMG/
+
 Aplikasi web untuk mengelola jasa makeup artist dengan 4 entitas yang saling terhubung:
 
 **Pelanggan → Booking ← Paket Makeup → Pembayaran**
